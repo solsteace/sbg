@@ -31,7 +31,7 @@ func (lh LineVertical) Render(bm BrailleMap) string {
 				svgEl = append(svgEl,
 					fmt.Sprintf(
 						`<line x1="%d" y1="%d" x2="%d" y2="%d" style="stroke-linecap:round;stroke:white;stroke-width:3"/>`,
-						xBegin, yBegin, xEnd, yIdx*int(lh.ScaleY)))
+						xBegin, yBegin, xEnd, (yIdx-1)*int(lh.ScaleY)))
 			} else if cellIsActive && !penDown {
 				yBegin = yIdx * int(lh.ScaleX)
 				penDown = true
