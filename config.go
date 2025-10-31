@@ -46,6 +46,10 @@ func (c config) getPainter() (graphic.Painter, error) {
 		return graphic.LineHorizontal{ScaleX: 5, ScaleY: 5}, nil
 	case graphic.LINE_VERTICAL:
 		return graphic.LineVertical{ScaleX: 5, ScaleY: 5}, nil
+	case graphic.DIAGONAL_UP:
+		return graphic.DiagonalUp{ScaleX: 5, ScaleY: 5}, nil
+	case graphic.DIAGONAL_DOWN:
+		return graphic.DiagonalDown{ScaleX: 5, ScaleY: 5}, nil
 	default:
 		return nil, fmt.Errorf(
 			"config.getRenderer: %s is not available yet. Try one from the list below:\n%s",

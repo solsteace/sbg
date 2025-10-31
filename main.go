@@ -236,5 +236,7 @@ Flags:
 	[name] omitted, line-horizontal would be used. [name] possible values are:
 		line-horizontal
 		line-vertical
+		diagonal-up
+		diagonal-down
 `
 )
