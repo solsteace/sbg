@@ -3,49 +3,15 @@ package main
 import (
 	"fmt"
 	"os"
-	"slices"
 	"strings"
 
 	"github.com/solsteace/sbg/render"
-)
-
-const (
-	fLAG_SOURCE      = "--source"
-	fLAG_DESTINATION = "--destination"
-	fLAG_VARIATION   = "--variation"
 )
 
 type config struct {
 	source      string
 	destination string
 	variation   string
-}
-
-func configFromArgs(osArgs []string) config {
-	config := config{}
-
-	var lastFlag string
-	flags := []string{
-		fLAG_SOURCE,
-		fLAG_DESTINATION,
-		fLAG_VARIATION}
-	for _, arg := range os.Args {
-		if slices.Index(flags, arg) != -1 {
-			lastFlag = arg
-			continue
-		}
-
-		switch lastFlag {
-		case fLAG_SOURCE:
-			config.source = arg
-		case fLAG_DESTINATION:
-			config.destination = arg
-		case fLAG_VARIATION:
-			config.variation = arg
-		}
-	}
-
-	return config
 }
 
 func (c config) getSource() (*os.File, error) {
@@ -67,7 +33,7 @@ func (c config) getDestination() (*os.File, error) {
 		return os.Stdout, nil
 	}
 
-	f, err := os.Open(destination)
+	f, err := os.OpenFile(destination, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
 		return nil, fmt.Errorf("config.getDestination: %w", err)
 	}
