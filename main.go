@@ -84,8 +84,10 @@ func main() {
 				state = "paramsSufficient"
 			case fLAG_VARIATION, fLAG_VARIATION_SHORT:
 				switch arg {
-				case "line-vertical",
-					"line-horizontal":
+				case graphic.LINE_HORIZONTAL,
+					graphic.LINE_VERTICAL,
+					graphic.DIAGONAL_UP,
+					graphic.DIAGONAL_DOWN:
 
 					config.variation = arg
 					state = "paramsSufficient"
@@ -164,7 +166,7 @@ func main() {
 		braille = append(braille, rows...)
 	}
 
-	renderer, err := config.getRenderer()
+	renderer, err := config.getPainter()
 	if err != nil {
 		log.Fatal(err)
 	}

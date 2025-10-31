@@ -5,12 +5,14 @@ import (
 	"strings"
 )
 
+const LINE_VERTICAL = "line-vertical"
+
 type LineVertical struct {
 	ScaleX int
 	ScaleY int
 }
 
-func (lh LineVertical) SVG(bm BrailleMap) string {
+func (lv LineVertical) SVG(bm BrailleMap) string {
 	var svgEl []string
 	var longestLineLen int
 	for _, row := range bm {
@@ -21,12 +23,12 @@ func (lh LineVertical) SVG(bm BrailleMap) string {
 
 	for xIdx := 0; xIdx < longestLineLen; xIdx++ {
 		penDown := false
-		yBegin := 0
-		xBegin, xEnd := xIdx*int(lh.ScaleY), xIdx*int(lh.ScaleY)
+		xBegin, xEnd := xIdx*int(lv.ScaleY), xIdx*int(lv.ScaleY)
+		var yBegin int
 		for yIdx, row := range bm {
 			cellIsActive := len(row) > xIdx && row[xIdx]
 			if cellIsActive && !penDown {
-				yBegin = yIdx * int(lh.ScaleX)
+				yBegin = yIdx * int(lv.ScaleX)
 				penDown = true
 			}
 
@@ -35,12 +37,12 @@ func (lh LineVertical) SVG(bm BrailleMap) string {
 				svgEl = append(svgEl,
 					fmt.Sprintf(
 						`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
-						xBegin, yBegin, xEnd, (yIdx-1)*int(lh.ScaleY)))
+						xBegin, yBegin, xEnd, (yIdx-1)*int(lv.ScaleY)))
 			} else if yIdx == len(bm)-1 && penDown {
 				svgEl = append(svgEl,
 					fmt.Sprintf(
 						`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
-						xBegin, yBegin, xEnd, (yIdx)*int(lh.ScaleY)))
+						xBegin, yBegin, xEnd, (yIdx)*int(lv.ScaleY)))
 			}
 		}
 	}
@@ -55,10 +57,10 @@ func (lh LineVertical) SVG(bm BrailleMap) string {
 		>
 			%s
 		</svg>`,
-		-lh.ScaleX,
-		-lh.ScaleY,
-		lh.ScaleX*(longestLineLen+1),
-		lh.ScaleY*(len(bm)+1),
+		-lv.ScaleX,
+		-lv.ScaleY,
+		lv.ScaleX*(longestLineLen+1),
+		lv.ScaleY*(len(bm)+1),
 		strings.Join(svgEl, ""))
 	return svg
 }

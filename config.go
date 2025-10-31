@@ -40,11 +40,11 @@ func (c config) getDestination() (*os.File, error) {
 	return f, nil
 }
 
-func (c config) getRenderer() (graphic.Painter, error) {
+func (c config) getPainter() (graphic.Painter, error) {
 	switch c.variation {
-	case "", "line-horizontal":
+	case "", graphic.LINE_HORIZONTAL:
 		return graphic.LineHorizontal{ScaleX: 5, ScaleY: 5}, nil
-	case "line-vertical":
+	case graphic.LINE_VERTICAL:
 		return graphic.LineVertical{ScaleX: 5, ScaleY: 5}, nil
 	default:
 		return nil, fmt.Errorf(

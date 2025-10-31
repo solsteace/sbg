@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+const LINE_HORIZONTAL = "line-horizontal"
+
 type LineHorizontal struct {
 	ScaleX int
 	ScaleY int
@@ -14,14 +16,13 @@ func (lh LineHorizontal) SVG(bm BrailleMap) string {
 	var svgEl []string
 	var longestLineLen int
 	for idx, row := range bm {
-		penDown := false
-		xBegin := 0
-		yBegin, yEnd := idx*int(lh.ScaleY), idx*int(lh.ScaleY)
-
 		if rowLen := len(row); rowLen > longestLineLen {
 			longestLineLen = rowLen
 		}
 
+		penDown := false
+		yBegin, yEnd := idx*int(lh.ScaleY), idx*int(lh.ScaleY)
+		var xBegin int
 		for idx, cellIsActive := range row {
 			if cellIsActive && !penDown {
 				xBegin = idx * int(lh.ScaleX)
