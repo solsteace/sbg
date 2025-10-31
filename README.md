@@ -1,4 +1,4 @@
-# What is this?
+## What is SBG?
 
  <table>
   <tr>
@@ -33,3 +33,9 @@
   </td>
   </tr>
  </table>
+
+## Okaay, what could you do with it?
+
+Well, pretty much everything CSS could do with SVGs! Like this:
+
+https://github.com/user-attachments/assets/557c74f8-af23-443c-9d93-1563de15ca7f
