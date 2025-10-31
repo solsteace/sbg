@@ -19,22 +19,28 @@ func (lh LineVertical) SVG(bm BrailleMap) string {
 		}
 	}
 
-	penDown := false
 	for xIdx := 0; xIdx < longestLineLen; xIdx++ {
+		penDown := false
 		yBegin := 0
 		xBegin, xEnd := xIdx*int(lh.ScaleY), xIdx*int(lh.ScaleY)
 		for yIdx, row := range bm {
 			cellIsActive := len(row) > xIdx && row[xIdx]
-			strokeDone := (!cellIsActive && penDown) || (yIdx == len(bm)-1 && penDown)
-			if strokeDone {
+			if cellIsActive && !penDown {
+				yBegin = yIdx * int(lh.ScaleX)
+				penDown = true
+			}
+
+			if !cellIsActive && penDown {
 				penDown = false
 				svgEl = append(svgEl,
 					fmt.Sprintf(
 						`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
 						xBegin, yBegin, xEnd, (yIdx-1)*int(lh.ScaleY)))
-			} else if cellIsActive && !penDown {
-				yBegin = yIdx * int(lh.ScaleX)
-				penDown = true
+			} else if yIdx == len(bm)-1 && penDown {
+				svgEl = append(svgEl,
+					fmt.Sprintf(
+						`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
+						xBegin, yBegin, xEnd, (yIdx)*int(lh.ScaleY)))
 			}
 		}
 	}

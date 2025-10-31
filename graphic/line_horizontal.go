@@ -23,16 +23,22 @@ func (lh LineHorizontal) SVG(bm BrailleMap) string {
 		}
 
 		for idx, cellIsActive := range row {
-			strokeDone := (!cellIsActive && penDown) || (idx == len(row)-1 && penDown)
-			if strokeDone {
+			if cellIsActive && !penDown {
+				xBegin = idx * int(lh.ScaleX)
+				penDown = true
+			}
+
+			if !cellIsActive && penDown {
 				penDown = false
 				svgEl = append(svgEl,
 					fmt.Sprintf(
 						`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
 						xBegin, yBegin, (idx-1)*int(lh.ScaleX), yEnd))
-			} else if cellIsActive && !penDown {
-				xBegin = idx * int(lh.ScaleX)
-				penDown = true
+			} else if idx == len(bm)-1 && penDown {
+				svgEl = append(svgEl,
+					fmt.Sprintf(
+						`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
+						xBegin, yBegin, (idx)*int(lh.ScaleX), yEnd))
 			}
 		}
 	}
