@@ -36,6 +36,6 @@
 
 ## Okaay, what could you do with it?
 
-Well, pretty much everything CSS could do with SVGs! Like this:
+Well, pretty much everything CSS could do with SVGs!
 
-https://github.com/user-attachments/assets/557c74f8-af23-443c-9d93-1563de15ca7f
+<img width="320" height="320" alt="neat thing one could do" src="https://github.com/user-attachments/assets/54c56a01-08eb-45e1-8ea3-8f42105ceeda" />
