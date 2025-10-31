@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/solsteace/sbg/render"
+	"github.com/solsteace/sbg/graphic"
 )
 
 type config struct {
@@ -40,12 +40,12 @@ func (c config) getDestination() (*os.File, error) {
 	return f, nil
 }
 
-func (c config) getRenderer() (render.Renderer, error) {
+func (c config) getRenderer() (graphic.Painter, error) {
 	switch c.variation {
 	case "", "line-horizontal":
-		return render.LineHorizontal{ScaleX: 5, ScaleY: 5}, nil
+		return graphic.LineHorizontal{ScaleX: 5, ScaleY: 5}, nil
 	case "line-vertical":
-		return render.LineVertical{ScaleX: 5, ScaleY: 5}, nil
+		return graphic.LineVertical{ScaleX: 5, ScaleY: 5}, nil
 	default:
 		return nil, fmt.Errorf(
 			"config.getRenderer: %s is not available yet. Try one from the list below:\n%s",

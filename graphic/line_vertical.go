@@ -1,4 +1,4 @@
-package render
+package graphic
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ type LineVertical struct {
 	ScaleY int
 }
 
-func (lh LineVertical) Render(bm BrailleMap) string {
+func (lh LineVertical) SVG(bm BrailleMap) string {
 	var svgEl []string
 	var longestLineLen int
 	for _, row := range bm {

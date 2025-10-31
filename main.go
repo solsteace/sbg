@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/solsteace/sbg/render"
+	"github.com/solsteace/sbg/graphic"
 )
 
 func main() {
@@ -148,7 +148,7 @@ func main() {
 	defer input.Close()
 
 	bufR := bufio.NewReader(input)
-	var braille render.BrailleMap
+	var braille graphic.BrailleMap
 	for EOF := false; !EOF; {
 		content, err := bufR.ReadString('\n')
 		if err == io.EOF {
@@ -157,7 +157,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		rows, err := mapBraille(strings.TrimSpace(content))
+		rows, err := graphic.Map(strings.TrimSpace(content))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -168,7 +168,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	svg := renderer.Render(braille)
+	svg := renderer.SVG(braille)
 
 	out, err := config.getDestination()
 	if err != nil {

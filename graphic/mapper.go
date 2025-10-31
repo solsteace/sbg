@@ -1,10 +1,12 @@
-package main
+package graphic
 
 import "fmt"
 
+type BrailleMap = [][]bool
+
 // One line produces Nx4 grid with N is the length of the braille text
-func mapBraille(braille string) ([][]bool, error) {
-	lane := [][]bool{
+func Map(braille string) (BrailleMap, error) {
+	lane := BrailleMap{
 		[]bool{},
 		[]bool{},
 		[]bool{},
