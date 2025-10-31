@@ -28,8 +28,8 @@
    </td>
 
    <td> ...into SVG you can attach to HTML like this (more <a href="./examples">samples!</a>)<br>
-     
-<img width="380" height="380" alt="image" src="https://github.com/user-attachments/assets/7d2f0f47-cdbb-42c5-9faa-26c6dbf65d86" />
+
+<img width="380" height="380" alt="image" src="https://github.com/user-attachments/assets/b99da18a-c695-4bf1-9463-7509949ae124" />
   </td>
   </tr>
  </table>
