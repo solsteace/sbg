@@ -2,7 +2,7 @@ package graphic
 
 import (
 	"fmt"
-	"strings"
+	"sync"
 )
 
 const LINE_VERTICAL = "line-vertical"
@@ -13,54 +13,77 @@ type LineVertical struct {
 }
 
 func (lv LineVertical) SVG(bm BrailleMap) string {
-	var svgEl []string
+	var nPainters int
 	var longestLineLen int
 	for _, row := range bm {
+		if nPainters < 4 { // cap
+			nPainters++
+		}
+
 		if rowLen := len(row); longestLineLen < rowLen {
 			longestLineLen = rowLen
 		}
 	}
 
-	for xIdx := 0; xIdx < longestLineLen; xIdx++ {
-		penDown := false
-		xBegin, xEnd := xIdx*int(lv.ScaleY), xIdx*int(lv.ScaleY)
-		var yBegin int
-		for yIdx, row := range bm {
-			cellIsActive := len(row) > xIdx && row[xIdx]
-			if cellIsActive && !penDown {
-				yBegin = yIdx * int(lv.ScaleX)
-				penDown = true
-			}
+	painters := sync.WaitGroup{}
+	svgEl := make(chan string, nPainters)
+	columns := make(chan int)
+	for pIdx := 0; pIdx < nPainters; pIdx++ {
+		painters.Add(1)
+		go func(id int) {
+			defer painters.Done()
 
-			if !cellIsActive && penDown {
-				penDown = false
-				svgEl = append(svgEl,
-					fmt.Sprintf(
-						`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
-						xBegin, yBegin, xEnd, (yIdx-1)*int(lv.ScaleY)))
-			} else if yIdx == len(bm)-1 && penDown {
-				svgEl = append(svgEl,
-					fmt.Sprintf(
-						`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
-						xBegin, yBegin, xEnd, (yIdx)*int(lv.ScaleY)))
+			for cIdx := range columns {
+				penDown := false
+				xBegin, xEnd := cIdx*int(lv.ScaleY), cIdx*int(lv.ScaleY)
+				var yBegin int
+				for yIdx, row := range bm {
+					cellIsActive := len(row) > cIdx && row[cIdx]
+					if cellIsActive && !penDown {
+						yBegin = yIdx * int(lv.ScaleX)
+						penDown = true
+					}
+
+					if !cellIsActive && penDown {
+						penDown = false
+						svgEl <- fmt.Sprintf(
+							`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
+							xBegin, yBegin, xEnd, (yIdx-1)*int(lv.ScaleY))
+					} else if yIdx == len(bm)-1 && penDown {
+						svgEl <- fmt.Sprintf(
+							`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
+							xBegin, yBegin, xEnd, (yIdx)*int(lv.ScaleY))
+					}
+				}
 			}
-		}
+		}(pIdx)
 	}
+	go func() {
+		painters.Wait()
+		close(svgEl)
+	}()
+
+	go func() {
+		for idx := 0; idx < longestLineLen; idx++ {
+			columns <- idx
+		}
+		close(columns)
+	}()
 
 	svg := fmt.Sprintf(`
 		<svg 
 			height="320px"
-			width=320px
+			width="320px"
 			viewBox="%d %d %d %d" 
 			xmlns="http://www.w3.org/2000/svg" 
 			style="background: black; border:1px solid black; stroke-linecap:round; stroke: white; stroke-width: 3;"
-		>
-			%s
-		</svg>`,
+		>`,
 		-lv.ScaleX,
 		-lv.ScaleY,
 		lv.ScaleX*(longestLineLen+1),
-		lv.ScaleY*(len(bm)+1),
-		strings.Join(svgEl, ""))
-	return svg
+		lv.ScaleY*(len(bm)+1))
+	for el := range svgEl {
+		svg += el
+	}
+	return fmt.Sprintf("%s </svg>", svg)
 }

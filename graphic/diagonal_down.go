@@ -2,7 +2,7 @@ package graphic
 
 import (
 	"fmt"
-	"strings"
+	"sync"
 )
 
 const DIAGONAL_DOWN = "diagonal-down"
@@ -13,57 +13,80 @@ type DiagonalDown struct {
 }
 
 func (dd DiagonalDown) SVG(bm BrailleMap) string {
-	var svgEl []string
+	var nPainters int
 	var longestLineLen int
 	for _, row := range bm {
+		if nPainters < 4 { // cap
+			nPainters++
+		}
+
 		if rowLen := len(row); longestLineLen < rowLen {
 			longestLineLen = rowLen
 		}
 	}
 
-	for initXIdx := -longestLineLen; initXIdx < longestLineLen; initXIdx++ {
-		penDown := false
-		xIdx := initXIdx
-		var xBegin, yBegin int
-		for yIdx, row := range bm {
-			cellIsActive := xIdx >= 0 && len(row) > xIdx && row[xIdx]
-			if cellIsActive && !penDown {
-				xBegin = xIdx * int(dd.ScaleX)
-				yBegin = yIdx * int(dd.ScaleX)
-				penDown = true
-			}
+	painters := sync.WaitGroup{}
+	svgEl := make(chan string, nPainters)
+	diagonals := make(chan int)
+	for pIdx := 0; pIdx < nPainters; pIdx++ {
+		painters.Add(1)
+		go func(id int) {
+			defer painters.Done()
 
-			if !cellIsActive && penDown {
-				penDown = false
-				svgEl = append(svgEl,
-					fmt.Sprintf(
-						`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
-						xBegin, yBegin, (xIdx-1)*int(dd.ScaleX), (yIdx-1)*int(dd.ScaleY)))
-			} else if yIdx == len(bm)-1 && penDown {
-				svgEl = append(svgEl,
-					fmt.Sprintf(
-						`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
-						xBegin, yBegin, xIdx*int(dd.ScaleX), yIdx*int(dd.ScaleY)))
-			}
-			xIdx++
-		}
+			for startingIdx := range diagonals {
+				penDown := false
+				xIdx := startingIdx
+				var xBegin, yBegin int
+				for yIdx, row := range bm {
+					cellIsActive := xIdx >= 0 && len(row) > xIdx && row[xIdx]
+					if cellIsActive && !penDown {
+						xBegin = xIdx * int(dd.ScaleX)
+						yBegin = yIdx * int(dd.ScaleX)
+						penDown = true
+					}
 
+					if !cellIsActive && penDown {
+						penDown = false
+						svgEl <- fmt.Sprintf(
+							`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
+							xBegin, yBegin, (xIdx-1)*int(dd.ScaleX), (yIdx-1)*int(dd.ScaleY))
+					} else if yIdx == len(bm)-1 && penDown {
+						svgEl <- fmt.Sprintf(
+							`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
+							xBegin, yBegin, xIdx*int(dd.ScaleX), yIdx*int(dd.ScaleY))
+					}
+					xIdx++
+				}
+			}
+		}(pIdx)
 	}
+
+	go func() {
+		painters.Wait()
+		close(svgEl)
+	}()
+
+	go func() {
+		for startingIdx := -longestLineLen; startingIdx < longestLineLen; startingIdx++ {
+			diagonals <- startingIdx
+		}
+		close(diagonals)
+	}()
 
 	svg := fmt.Sprintf(`
 		<svg 
 			height="320px"
-			width=320px
+			width="320px"
 			viewBox="%d %d %d %d" 
 			xmlns="http://www.w3.org/2000/svg" 
 			style="background: black; border:1px solid black; stroke-linecap:round; stroke: white; stroke-width: 3;"
-		>
-			%s
-		</svg>`,
+		>`,
 		-dd.ScaleX,
 		-dd.ScaleY,
 		dd.ScaleX*(longestLineLen+1),
-		dd.ScaleY*(len(bm)+1),
-		strings.Join(svgEl, ""))
-	return svg
+		dd.ScaleY*(len(bm)+1))
+	for el := range svgEl {
+		svg += el
+	}
+	return fmt.Sprintf("%s </svg>", svg)
 }
