@@ -28,20 +28,18 @@ func (lh LineHorizontal) SVG(bm BrailleMap) string {
 	// Idea: each worker handles one line at a time
 	painters := sync.WaitGroup{}
 	svgEl := make(chan string, nPainters)
-	rows := make(chan struct {
-		nRow    int
-		content []bool
-	})
+	rows := make(chan int)
 	for pIdx := 0; pIdx < nPainters; pIdx++ {
 		painters.Add(1)
 		go func(id int) {
 			defer painters.Done()
 
-			for row := range rows {
+			for rowIdx := range rows {
 				penDown := false
-				yBegin, yEnd := row.nRow*int(lh.ScaleY), row.nRow*int(lh.ScaleY)
+				row := bm[rowIdx]
+				yBegin, yEnd := rowIdx*int(lh.ScaleY), rowIdx*int(lh.ScaleY)
 				var xBegin int
-				for xIdx, cellIsActive := range row.content {
+				for xIdx, cellIsActive := range row {
 					if cellIsActive && !penDown {
 						xBegin = xIdx * int(lh.ScaleX)
 						penDown = true
@@ -52,7 +50,7 @@ func (lh LineHorizontal) SVG(bm BrailleMap) string {
 						svgEl <- fmt.Sprintf(
 							`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
 							xBegin, yBegin, (xIdx-1)*int(lh.ScaleX), yEnd)
-					} else if xIdx == len(bm)-1 && penDown {
+					} else if xIdx == len(row)-1 && penDown {
 						svgEl <- fmt.Sprintf(
 							`<line x1="%d" y1="%d" x2="%d" y2="%d"/>`,
 							xBegin, yBegin, (xIdx)*int(lh.ScaleX), yEnd)
@@ -67,12 +65,8 @@ func (lh LineHorizontal) SVG(bm BrailleMap) string {
 	}()
 
 	go func() {
-		for idx, row := range bm {
-			rows <- struct {
-				nRow    int
-				content []bool
-			}{
-				idx, row}
+		for idx := 0; idx < len(bm); idx++ {
+			rows <- idx
 		}
 		close(rows)
 	}()
