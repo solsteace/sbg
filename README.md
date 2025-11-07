@@ -38,4 +38,5 @@
 
 Well, pretty much everything CSS could do with SVGs!
 
+<img width="320" height="320" alt="neat thing one could do" src="https://github.com/user-attachments/assets/9c88a468-10ad-4a7e-b8da-66c40305e7d7" /> <br />
 <img width="320" height="320" alt="neat thing one could do" src="https://github.com/user-attachments/assets/54c56a01-08eb-45e1-8ea3-8f42105ceeda" />
