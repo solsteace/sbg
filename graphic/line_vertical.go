@@ -35,12 +35,12 @@ func (lv LineVertical) SVG(bm BrailleMap) string {
 
 			for cIdx := range columns {
 				penDown := false
-				xBegin, xEnd := cIdx*int(lv.ScaleY), cIdx*int(lv.ScaleY)
+				xBegin, xEnd := cIdx*int(lv.ScaleX), cIdx*int(lv.ScaleX)
 				var yBegin int
 				for yIdx, row := range bm {
 					cellIsActive := len(row) > cIdx && row[cIdx]
 					if cellIsActive && !penDown {
-						yBegin = yIdx * int(lv.ScaleX)
+						yBegin = yIdx * int(lv.ScaleY)
 						penDown = true
 					}
 

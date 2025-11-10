@@ -41,7 +41,7 @@ func (du DiagonalUp) SVG(bm BrailleMap) string {
 					cellIsActive := xIdx >= 0 && len(row) > xIdx && row[xIdx]
 					if cellIsActive && !penDown {
 						xBegin = xIdx * int(du.ScaleX)
-						yBegin = yIdx * int(du.ScaleX)
+						yBegin = yIdx * int(du.ScaleY)
 						penDown = true
 					}
 
