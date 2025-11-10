@@ -1,0 +1,10 @@
+{
+    "source": "",
+    "destination": "",
+    "variation": "line-horizontal",
+
+    "painter": {
+        "scaleX": 5,
+        "scaleY": 5
+    }
+}

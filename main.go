@@ -23,114 +23,49 @@ func main() {
 		input = os.Stdin
 	}
 
-	state := "app"
-	args := os.Args
-	endEarly := false
-	var config config
+	state := sTATE_READY
 	var lastFlag string
-	for idx := 1; idx < len(args) && !endEarly; idx++ {
-		switch arg := args[idx]; state {
-		case "app":
-			switch arg {
-			case fLAG_HELP,
-				fLAG_HELP_SHORT:
-				state = "instaEndFlag"
-				lastFlag = arg
-
-			case fLAG_SOURCE,
-				fLAG_VARIATION,
-				fLAG_DESTINATION,
-				fLAG_SOURCE_SHORT,
-				fLAG_VARIATION_SHORT,
-				fLAG_DESTINATION_SHORT:
-				state = "flagOptParams"
-				lastFlag = arg
-			default:
-				endEarly = true
-
-				// No "flagWithParams" yet...
-				// No "flagNoParams" yet...
-			}
-
-		case "instaEndFlag":
-			endEarly = true
-
-		case "flagOptParams":
-			// Is it a flag?
-			switch arg {
-			case fLAG_SOURCE,
-				fLAG_VARIATION,
-				fLAG_DESTINATION,
-				fLAG_SOURCE_SHORT,
-				fLAG_VARIATION_SHORT,
-				fLAG_DESTINATION_SHORT:
-
-				state = "flagOptParams"
-				lastFlag = arg
-				continue
-
-				// No "flagWithParam" yet...
-				// No "flagNoParam" yet...
-				// No "paramsInsufficient" yet...
-			}
-
-			// Perhaps its an parameter for...
+	var config config
+	var configSet bool
+	for idx := 1; idx < len(os.Args); idx++ {
+		arg := os.Args[idx]
+		switch state {
+		case sTATE_INSTA_END:
 			switch lastFlag {
-			case fLAG_SOURCE, fLAG_SOURCE_SHORT:
-				config.source = arg
-				state = "paramsSufficient"
-			case fLAG_DESTINATION, fLAG_DESTINATION_SHORT:
-				config.destination = arg
-				state = "paramsSufficient"
-			case fLAG_VARIATION, fLAG_VARIATION_SHORT:
-				switch arg {
-				case graphic.LINE_HORIZONTAL,
-					graphic.LINE_VERTICAL,
-					graphic.DIAGONAL_UP,
-					graphic.DIAGONAL_DOWN:
-
-					config.variation = arg
-					state = "paramsSufficient"
-				default:
-					log.Fatalf("Illegal value for variation: `%s`", arg)
-				}
+			case fLAG_HELP:
+				fmt.Println(tEXT_HELP)
+			case fLAG_HELP_SHORT:
+				fmt.Println(tEXT_HELP_SHORT)
 			}
-		case "flagWithParams":
-			continue // Nothing here yet
-		case "flagNoParams":
-			continue // Nothing here yet
-		case "paramsSufficient":
+			os.Exit(0)
+		case sTATE_READY:
 			switch arg {
-			case fLAG_SOURCE,
-				fLAG_VARIATION,
-				fLAG_DESTINATION,
-				fLAG_SOURCE_SHORT,
-				fLAG_VARIATION_SHORT,
-				fLAG_DESTINATION_SHORT:
-
-				state = "flagOptParams"
+			case fLAG_HELP, fLAG_HELP_SHORT:
+				state = sTATE_INSTA_END
 				lastFlag = arg
-
-				// No "flagWithParam" yet...
-				// No "flagNoParam" yet...
+			case fLAG_CONFIG, fLAG_CONFIG_SHORT:
+				state = sTATE_NEED_PARAMS
+				lastFlag = arg
 			}
-		case "paramsInsufficient":
-			continue // Nothing here yet
+		case sTATE_NEED_PARAMS:
+			switch lastFlag {
+			case fLAG_CONFIG, fLAG_CONFIG_SHORT:
+				if err := config.fromFile(arg); err != nil {
+					log.Fatal(err)
+				}
+				configSet = true
+				state = sTATE_READY
+			}
 		}
 	}
 
-	switch {
-	case lastFlag == "" && !inputPiped,
-		state == "instaEndFlag" && lastFlag == fLAG_HELP_SHORT:
+	if lastFlag == "" && !inputPiped {
 		fmt.Println(tEXT_HELP_SHORT)
 		os.Exit(0)
-	case state == "instaEndFlag" && lastFlag == fLAG_HELP:
-		fmt.Println(tEXT_HELP)
-		os.Exit(0)
-	case state == "paramsInsufficient":
-		log.Fatalf("Insufficient parameter for `%s`", lastFlag)
-	case state == "flagWithParam":
-		log.Fatalf("No parameter was supplied for `%s`", lastFlag)
+	} else if !configSet {
+		if err := config.fromFile("./config.json"); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	if !inputPiped {

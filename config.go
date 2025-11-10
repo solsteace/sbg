@@ -1,21 +1,57 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
 	"github.com/solsteace/sbg/graphic"
 )
 
+type painterConfig struct {
+	ScaleX int `json:"scaleX"`
+	ScaleY int `json:"scaleY"`
+}
+
 type config struct {
-	source      string
-	destination string
-	variation   string
+	Source      string `json:"source"`
+	Destination string `json:"destination"`
+	Variation   string `json:"variation"`
+
+	Painter painterConfig `json:"painter"`
+}
+
+func (c *config) fromFile(path string) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("config.fromFile: %w", err)
+	}
+	defer f.Close()
+
+	confString, err := io.ReadAll(f)
+	if err != nil {
+		return fmt.Errorf("config.fromFile: %w", err)
+	}
+
+	if err := json.Unmarshal(confString, c); err != nil {
+		return fmt.Errorf("config.fromFile: %w", err)
+	}
+
+	// Fallbacks
+	if c.Painter.ScaleX < 0 {
+		c.Painter.ScaleX = 5
+	}
+	if c.Painter.ScaleY < 0 {
+		c.Painter.ScaleY = 5
+	}
+
+	return nil
 }
 
 func (c config) getSource() (*os.File, error) {
-	source := c.source
+	source := c.Source
 	if source == "" {
 		return os.Stdin, nil
 	}
@@ -28,7 +64,7 @@ func (c config) getSource() (*os.File, error) {
 }
 
 func (c config) getDestination() (*os.File, error) {
-	destination := c.destination
+	destination := c.Destination
 	if destination == "" {
 		return os.Stdout, nil
 	}
@@ -41,21 +77,31 @@ func (c config) getDestination() (*os.File, error) {
 }
 
 func (c config) getPainter() (graphic.Painter, error) {
-	switch c.variation {
-	case "", graphic.LINE_HORIZONTAL:
-		return graphic.LineHorizontal{ScaleX: 5, ScaleY: 5}, nil
+	switch c.Variation {
+	case graphic.LINE_HORIZONTAL:
+		return graphic.LineHorizontal{
+			ScaleX: c.Painter.ScaleX,
+			ScaleY: c.Painter.ScaleY}, nil
 	case graphic.LINE_VERTICAL:
-		return graphic.LineVertical{ScaleX: 5, ScaleY: 5}, nil
+		return graphic.LineVertical{
+			ScaleX: c.Painter.ScaleX,
+			ScaleY: c.Painter.ScaleY}, nil
 	case graphic.DIAGONAL_UP:
-		return graphic.DiagonalUp{ScaleX: 5, ScaleY: 5}, nil
+		return graphic.DiagonalUp{
+			ScaleX: c.Painter.ScaleX,
+			ScaleY: c.Painter.ScaleY}, nil
 	case graphic.DIAGONAL_DOWN:
-		return graphic.DiagonalDown{ScaleX: 5, ScaleY: 5}, nil
+		return graphic.DiagonalDown{
+			ScaleX: c.Painter.ScaleX,
+			ScaleY: c.Painter.ScaleY}, nil
 	default:
 		return nil, fmt.Errorf(
 			"config.getRenderer: %s is not available yet. Try one from the list below:\n%s",
-			c.variation,
-			strings.Join(
-				[]string{"line-horizontal", "line-vertical"},
-				"\n"))
+			c.Variation,
+			strings.Join([]string{
+				graphic.LINE_HORIZONTAL,
+				graphic.LINE_VERTICAL,
+				graphic.DIAGONAL_UP,
+				graphic.DIAGONAL_DOWN}, "\n"))
 	}
 }
