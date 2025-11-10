@@ -38,15 +38,6 @@ func (c *config) fromFile(path string) error {
 	if err := json.Unmarshal(confString, c); err != nil {
 		return fmt.Errorf("config.fromFile: %w", err)
 	}
-
-	// Fallbacks
-	if c.Painter.ScaleX < 0 {
-		c.Painter.ScaleX = 5
-	}
-	if c.Painter.ScaleY < 0 {
-		c.Painter.ScaleY = 5
-	}
-
 	return nil
 }
 
@@ -77,6 +68,12 @@ func (c config) getDestination() (*os.File, error) {
 }
 
 func (c config) getPainter() (graphic.Painter, error) {
+	if c.Painter.ScaleX <= 0 {
+		return nil, fmt.Errorf("config.getPainter: `painter.ScaleX` should be a positive number")
+	} else if c.Painter.ScaleY <= 0 {
+		return nil, fmt.Errorf("config.getPainter: `painter.ScaleY` should be a positive number")
+	}
+
 	switch c.Variation {
 	case graphic.LINE_HORIZONTAL:
 		return graphic.LineHorizontal{
@@ -96,7 +93,7 @@ func (c config) getPainter() (graphic.Painter, error) {
 			ScaleY: c.Painter.ScaleY}, nil
 	default:
 		return nil, fmt.Errorf(
-			"config.getRenderer: %s is not available yet. Try one from the list below:\n%s",
+			"config.getPainter: %s is not available yet. Try one from the list below:\n%s",
 			c.Variation,
 			strings.Join([]string{
 				graphic.LINE_HORIZONTAL,
